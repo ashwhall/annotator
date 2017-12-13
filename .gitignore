@@ -19,9 +19,8 @@
 *.userprefs
 
 # Build results
-[Dd]ebug/
+Annotator/x64
 [Dd]ebugPublic/
-[Rr]elease/
 [Rr]eleases/
 build/
 bld/
