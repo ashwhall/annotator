@@ -34,6 +34,7 @@
 
 double fontSize = 1;
 
+int frame_top = 0, frame_left = 0;
 int zoomFactor = 2;
 bool playing = false;
 bool zoomActive = false;
