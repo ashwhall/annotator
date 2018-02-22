@@ -351,11 +351,18 @@ void printEventList(ostream& os, vector<int>& eventList, const char* name) {
 	os << "]," << endl;
 }
 ostream& operator<<(ostream& os, Swimmer& s) {
+	cout << "_____________" << endl;
+	cout << "Writing lane " << s.laneNumber << endl;
 	os << "{" << endl << "\t\"laneNumber\": " << s.laneNumber << ", " << endl;
 	
+	cout << "Writing strokes" << endl;
 	printEventList(os, s.strokeFrames, "strokes");
+	cout << "Writing breaths" << endl;
 	printEventList(os, s.breathFrames, "breaths");
+	cout << "Writing breakouts" << endl;
+	printEventList(os, s.breakoutFrames, "breakouts");
 
+	cout << "Writing keyframes" << endl;
 	os << "\t\"keyFrames\": {" << endl;
 	
 	if (s.pastTrackingPoints.size() > 0) {
@@ -367,7 +374,7 @@ ostream& operator<<(ostream& os, Swimmer& s) {
 	os << "\t}" << endl;
 
 	os << "}";
-
+	cout << "_____________" << endl << endl;
 	return os;
 }
 
@@ -892,19 +899,21 @@ TrackingPoint* newKeyFrame(TrackingPoint* candidate, Swimmer* s) {
 void printResults(const char* filename) {
 	//if (swimmers.size() == 0)
 		//return;
+	cout << endl;
+	cout << "*******************************" << endl;
+	cout << "Opening output file for writing" << endl;
 	ofstream writeFile;
 	writeFile.open(filename);
 
 
-
+	cout << "Writing race metadata" << endl;
 	writeFile << "[" << endl
 			  << "{" << endl;
 	writeFile << "\t\"eventType\": \"" << eventType << "\"," << endl;
 	writeFile << "\t\"fileHash\": \"" << fileHash << "\"" << endl;
 
 	writeFile << "}," << endl;
-	
-	
+	cout << endl;
 	if (swimmers.size() > 0) {
 		for (int i = 0; i < swimmers.size() - 1; ++i) {
 			writeFile << (*swimmers[i]) << "," << endl;
@@ -914,7 +923,8 @@ void printResults(const char* filename) {
 	else {
 		writeFile << "{\n}\n]";
 	}
-
+	cout << endl;
+	cout << "Closing output file" << endl;
 	writeFile.close();
 }
 
@@ -1190,7 +1200,9 @@ int main(int argc, char* argv[]) {
 	} while (!actually_quit);
 
 	printResults(outputFilename.c_str());
+	cout << "Deleting backup file" << endl << endl;
 	deleteBackupFile();
+	cout << "Complete. Program exiting normally" << endl;
 	return 0;
 }
 
