@@ -827,7 +827,7 @@ void jumpFrame(int jump) {
 }
 
 void jumpToFrame(int frameNum) {
-	frameNum = max(0, min(maxFrames, frameNum));
+	frameNum = max(1, min(maxFrames, frameNum));
 	thisFrame = frameNum;
 	readFrame();
 	if (zoomImg != NULL) {
