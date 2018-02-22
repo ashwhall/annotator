@@ -47,6 +47,7 @@ using namespace cv;
 #define STOPFRAME_INDEX 2
 #define STROKE_INDEX 4
 #define BREATH_INDEX 8
+#define BREAKOUT_INDEX 16
 int* frameIndex;
 int frameIndexImgHeight = 50;
 double frameIndexRegionSize;
@@ -86,9 +87,9 @@ int selectedSwimmer = -1;
 bool wasPlaying = false; // This helps us know when we have just stopped playing
 
 
-// TODO: Add more event types here
-int markerTypeCount = 2;
-const char* markerTypes[2] = { "Stroke", "Breath" };
+						 // TODO: Add more event types here
+int markerTypeCount = 3;
+const char* markerTypes[3] = { "Stroke", "Breath", "Breakout" };
 int currentMarkerType = 0;
 
 

@@ -150,6 +150,7 @@ struct Swimmer {
 	int laneNumber;
 	vector<int> strokeFrames;
 	vector<int> breathFrames;
+	vector<int> breakoutFrames;
 	vector<TrackingPoint*> pastTrackingPoints;
 	TrackingPoint* latestRegion(int toFrame) {
 		for (vector<TrackingPoint*>::reverse_iterator it = pastTrackingPoints.rbegin(); it != pastTrackingPoints.rend(); ++it) {
@@ -196,6 +197,10 @@ struct Swimmer {
 			break;
 		case 1:
 			toggleBreath(frame);
+			break;
+		case 2:
+			toggleBreakout(frame);
+			break;
 		default: 
 			// Add more event types here...
 			break;
@@ -208,6 +213,9 @@ struct Swimmer {
 	}
 	void toggleBreath(int frame) {
 		toggleEvent(frame, breathFrames);
+	}
+	void toggleBreakout(int frame) {
+		toggleEvent(frame, breakoutFrames);
 	}
 
 	void addTrackingPoint(TrackingPoint* r) {
@@ -259,6 +267,10 @@ struct Swimmer {
 		else if (currentMarkerType == 1) {
 			eventFrames = &breathFrames;
 		}
+		else if (currentMarkerType == 2) {
+			eventFrames = &breakoutFrames;
+		}
+
 		for (int i = 0; i < eventFrames->size(); ++i) {
 			if ((*eventFrames)[i] == thisFrame) {
 				circle(img, cvPoint(bottomRight.x, bottomRight.y), 100, Scalar(255, 255, 255), 5);
@@ -382,11 +394,17 @@ Swimmer* loadSwimmer(Json::Value swimJson) {
 	for (int i = 0; i < nStrokes; ++i) {
 		s->toggleStroke(swimJson["strokes"][i].asInt());
 	}
+
 	int nBreaths = swimJson["breaths"].size();
 	for (int i = 0; i < nBreaths; ++i) {
 		s->toggleBreath(swimJson["breaths"][i].asInt());
 	}
 	
+	int nBreakouts = swimJson["breakouts"].size();
+	for (int i = 0; i < nBreakouts; ++i) {
+		s->toggleBreakout(swimJson["breakouts"][i].asInt());
+	}
+
 
 
 	vector<string> keyframeInds = swimJson["keyFrames"].getMemberNames();
@@ -688,11 +706,15 @@ void displayFrameIndex() {
 	else if (currentMarkerType == 1) {
 		currentEventIndex = BREATH_INDEX;
 	}
-
+	else if (currentMarkerType == 2) {
+		currentEventIndex = BREAKOUT_INDEX;
+	}
 	for (int i = 0; i < maxFrames; ++i) {
-		if(frameIndex[i] & currentEventIndex)
+		if (frameIndex[i] & currentEventIndex) {
 			circle(frameIndexImg, Point((int)(i*frameIndexRegionSize), 50), 10,
 				Scalar(0, 255, 255), -1);
+	}
+
 	}
 	// Current frame indicator
 	int triangleWidth = 12;
@@ -924,6 +946,10 @@ void buildFrameIndex() {
 					eventFrames = &swimmer->breathFrames;
 					eventIndex = BREATH_INDEX;
 				}
+				else if (currentMarkerType == 2) {
+					eventFrames = &swimmer->breakoutFrames;
+					eventIndex = BREAKOUT_INDEX;
+				}
 				for (int strokeFrame : *eventFrames) {
 					frameIndex[strokeFrame] |= eventIndex;
 				}
@@ -1026,6 +1052,7 @@ void runMenuLoop()
 			}
 			else if (key == 9) { // <tab>
 				currentMarkerType = abs(currentMarkerType + 1) % markerTypeCount;
+				buildFrameIndex();
 				redraw();
 			}
 		}
