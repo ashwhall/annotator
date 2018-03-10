@@ -111,23 +111,25 @@ struct TrackingPoint {
 	void draw(Mat& img, Point offset1, Point offset2) {
 		Point target_offset_x = Point(CORNER_CIRCLE_RAD, 0);
 		Point target_offset_y = Point(0, CORNER_CIRCLE_RAD);
-		line(img, getPos() - target_offset_x, getPos() + target_offset_x, COLOUR_CROSSHAIR, 2);
-		line(img, getPos() - target_offset_y, getPos() + target_offset_y, COLOUR_CROSSHAIR, 2);
+		int crosshairThickness = zoomActive ? 1 : 2;
+		line(img, getPos() - target_offset_x, getPos() + target_offset_x, COLOUR_CROSSHAIR, crosshairThickness);
+		line(img, getPos() - target_offset_y, getPos() + target_offset_y, COLOUR_CROSSHAIR, crosshairThickness);
 
+		int circleThickness = zoomActive ? 2 : 3;
 		if (frame == 0 || frame == thisFrame) {
 			// If it is the keyframe, then show it in red
-			circle(img, pos, CORNER_CIRCLE_RAD, COLOUR_KEYFRAME, 3);
+			circle(img, pos, CORNER_CIRCLE_RAD, COLOUR_KEYFRAME, circleThickness);
 		}
 		else {
 			// If it is not the keyframe, interpolate the position
 			//  and show in lime (purple if stopFrame).
 			Point inter2 = getPos() - offset2;
 			if (stopFrame) { 
-				circle(img, inter2, CORNER_CIRCLE_RAD, COLOUR_STOP_FRAME, 3);
+				circle(img, inter2, CORNER_CIRCLE_RAD, COLOUR_STOP_FRAME, circleThickness);
 			}
 			else
 			{
-				circle(img, inter2, CORNER_CIRCLE_RAD, COLOUR_NOT_KEYFRAME, 3);
+				circle(img, inter2, CORNER_CIRCLE_RAD, COLOUR_NOT_KEYFRAME, circleThickness);
 			}
 
 		}
@@ -636,6 +638,7 @@ char* helpStrings[] = { "Keyboard controls:",
 						"",
 						"    Enable/Disable Zoom:     z",
 						"    Zoom -/+:                x / c",
+"    Move zoom:               up/down/left/right",
 						"",
 						"    Select lane:             0-9",
 						"    Select all lanes:        `",
@@ -650,6 +653,7 @@ char* helpStrings[] = { "Keyboard controls:",
 						"    Move keyframe:           Drag <LEFT-MOUSE>",
 						"    Convert to endframe:     <SHIFT>+<LEFT-MOUSE>",
 						"    Delete keyframe:         <CTRL>+<LEFT-MOUSE>" };
+
 // Display shortcuts
 void displayHelp() {
 	int width = img.size().width, height = img.size().height;
@@ -746,7 +750,7 @@ void redraw() {
 		displayHelp();
 		return;
 	}
-	rectangle(img, Rect(0, 0, img.size().width, 60), Scalar(0, 0, 0), -1);
+	
 
 	// For each relevant region, draw it onto the image
 	int swimmer_count = (int)swimmers.size();
@@ -760,24 +764,25 @@ void redraw() {
 			}
 		}
 	}
-	if (!zoomActive && zoomImg != NULL) {
-		delete zoomImg;
-		zoomImg = NULL;
-	}
 
-	if (zoomActive && !playing){
-		if (zoomImg == NULL) {
-			zoomImg = new Mat();
-			frame.copyTo(*zoomImg);
-		}
 
-		drawZoomBox();
+
+	if (zoomActive) {
+		int height = img.size().height;
+		int width = img.size().width;
+		
+		Rect roi(frame_left, frame_top, width / zoomFactor, height / zoomFactor);
+		Mat tempImg(height / zoomFactor, width / zoomFactor, 0);
+		img(roi).copyTo(tempImg);
+		resize(tempImg, img, img.size());
 	}
+	rectangle(img, Rect(0, 0, img.size().width, 60), Scalar(0, 0, 0), -1);
 	displayInfo();
 
 	displayFrameIndex();
 	
 	drawMessage();
+	
 	imshow(mainWindowHandle, img);	
 }
 
@@ -896,16 +901,19 @@ TrackingPoint* newKeyFrame(TrackingPoint* candidate, Swimmer* s) {
 }
 
 // Writes data to output file
-void printResults(const char* filename) {
+void printResults(const char* filename, bool verbose) {
 	//if (swimmers.size() == 0)
 		//return;
+	if (verbose) {
 	cout << endl;
 	cout << "*******************************" << endl;
 	cout << "Opening output file for writing" << endl;
+	}
+	
 	ofstream writeFile;
 	writeFile.open(filename);
 
-
+	if (verbose)
 	cout << "Writing race metadata" << endl;
 	writeFile << "[" << endl
 			  << "{" << endl;
@@ -913,6 +921,7 @@ void printResults(const char* filename) {
 	writeFile << "\t\"fileHash\": \"" << fileHash << "\"" << endl;
 
 	writeFile << "}," << endl;
+	if (verbose)
 	cout << endl;
 	if (swimmers.size() > 0) {
 		for (int i = 0; i < swimmers.size() - 1; ++i) {
@@ -923,8 +932,10 @@ void printResults(const char* filename) {
 	else {
 		writeFile << "{\n}\n]";
 	}
+	if (verbose) {
 	cout << endl;
 	cout << "Closing output file" << endl;
+	}
 	writeFile.close();
 }
 
@@ -983,12 +994,21 @@ void saveBackupFile()
 	addMessage("Saving backup file");
 	redraw();
 	string backupFilename = outputFilename + string(".BAK");
-	printResults(backupFilename.c_str());
+	printResults(backupFilename.c_str(), false);
 }
 void deleteBackupFile()
 {
 	string backupFilename = outputFilename + string(".BAK");
 	remove(backupFilename.c_str());
+}
+void updateFrameBounds() {
+	frame_left = min(max(0, frame_left), img.size().width  - img.size().width / zoomFactor);
+	frame_top = min(max(0, frame_top), img.size().height - img.size().height / zoomFactor);
+}
+void moveZoom(int x_delta, int y_delta) {
+	frame_left += x_delta;
+	frame_top += y_delta;
+	updateFrameBounds();
 }
 void runMenuLoop()
 {
@@ -996,7 +1016,7 @@ void runMenuLoop()
 	time_t lastSave = time(0);
 
 	while (!getWindowProperty(mainWindowHandle, 0)) {
-		int key = waitKey(30); // read key
+		int key = waitKeyEx(30); // read key
 		if (key == 27) { // <esc>
 			break;
 		}
@@ -1054,15 +1074,33 @@ void runMenuLoop()
 			}
 			else if (key == 'x') {
 				zoomFactor = max(MIN_ZOOM_FACTOR, min(MAX_ZOOM_FACTOR, zoomFactor - 1));
+				updateFrameBounds();
 				redraw();
 			}
 			else if (key == 'c') {
 				zoomFactor = max(MIN_ZOOM_FACTOR, min(MAX_ZOOM_FACTOR, zoomFactor + 1));
+				updateFrameBounds();
 				redraw();
 			}
 			else if (key == 9) { // <tab>
 				currentMarkerType = abs(currentMarkerType + 1) % markerTypeCount;
 				buildFrameIndex();
+				redraw();
+			}
+			else if (key == 2490368) { // up
+				moveZoom(0, -15);
+				redraw();
+			}
+			else if (key == 2621440) { // down
+				moveZoom(0, 15);
+				redraw();
+			}
+			else if (key == 2424832) { // left
+				moveZoom(-15, 0);
+				redraw();
+			}
+			else if (key == 2555904) { // right
+				moveZoom(15, 0);
 				redraw();
 			}
 		}
@@ -1199,7 +1237,7 @@ int main(int argc, char* argv[]) {
 		actually_quit = setEventType();
 	} while (!actually_quit);
 
-	printResults(outputFilename.c_str());
+	printResults(outputFilename.c_str(), true);
 	cout << "Deleting backup file" << endl << endl;
 	deleteBackupFile();
 	cout << "Complete. Program exiting normally" << endl;
@@ -1240,10 +1278,12 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 	// Dont' respond to the mouse if the help screen is visible or the video's playing
 	if (helpActive)
 		return;
+	
 	handle = Point(x, y);
-	if (zoomActive && !playing) {
-		redraw();
-	}
+	int new_x = frame_left + x / (float)zoomFactor;
+	int new_y = frame_top + y / (float)zoomFactor;
+	Point scaledHandle(new_x, new_y);
+	
 
 	// if it's not a left-click, then we don't care
 	/*if (event != CV_EVENT_LBUTTONDOWN) {
@@ -1254,7 +1294,7 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 	if (!playing && flags == (EVENT_FLAG_CTRLKEY + EVENT_FLAG_LBUTTON)) {
 		Swimmer* s;
 		int swimmerIndex;
-		TrackingPoint* r = existingRegion(handle, &s, &swimmerIndex);
+		TrackingPoint* r = existingRegion(scaledHandle, &s, &swimmerIndex);
 		
 		// Entirely delete swimmer if we're removing their only tracking point
 		if (r && s && s->pastTrackingPoints.size() <= 1) {
@@ -1281,7 +1321,7 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 	}
 	else if (!playing && flags == (EVENT_FLAG_SHIFTKEY + EVENT_FLAG_LBUTTON)) {
 		Swimmer* s = NULL;
-		existingRegion(handle, &s);
+		existingRegion(scaledHandle, &s);
 		if (s) {
 			s->stopTracking(thisFrame);
 			buildFrameIndex();
@@ -1313,7 +1353,7 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 		}
 		else if(!playing) {
 			r = new TrackingPoint;
-			(*r).pos = handle;
+			(*r).pos = scaledHandle;
 			r->visible = false;
 			cvSetMouseCallback(mainWindowHandle, newRegMouseHandler, NULL);
 		}
@@ -1324,7 +1364,12 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 // Corner 2 is the continually updated other corner
 void newRegMouseHandler(int event, int x, int y, int flags, void* params) {
 	// Clean display
+	if (zoomActive) {
+		x = frame_left + x / (float)zoomFactor;
+		y = frame_top + y / (float)zoomFactor;
+	}
 	handle = Point(x, y);
+	
 	redraw();
 
 	// Take the new position, add it to the image and show it
@@ -1355,6 +1400,10 @@ void newRegMouseHandler(int event, int x, int y, int flags, void* params) {
 }
 
 void moveRegMouseHandler(int event, int x, int y, int flags, void* params) {
+	if (zoomActive) {
+		x = frame_left + x / (float)zoomFactor;
+		y = frame_top + y / (float)zoomFactor;
+	}
 	handle = Point(x, y);
 	redraw();
 
@@ -1374,6 +1423,10 @@ void moveRegMouseHandler(int event, int x, int y, int flags, void* params) {
 }
 
 void moveRegCorMouseHandler(int event, int x, int y, int flags, void* params) {
+	if (zoomActive) {
+		x = frame_left + x / (float)zoomFactor;
+		y = frame_top + y / (float)zoomFactor;
+	}
 	handle = Point(x, y);
 	redraw();
 
