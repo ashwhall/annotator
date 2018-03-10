@@ -41,8 +41,12 @@ bool zoomActive = false;
 
 bool helpActive = true;
 
+bool crosshairVisible = true;
+
 using namespace std;
 using namespace cv;
+
+ofstream diagnosticFile;
 
 #define KEYFRAME_INDEX 1
 #define STOPFRAME_INDEX 2

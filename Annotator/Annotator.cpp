@@ -343,7 +343,7 @@ ostream& operator<<(ostream& os, const TrackingPoint& r) {
 
 void printEventList(ostream& os, vector<int>& eventList, const char* name) {
 	os << "\t\"" << name << "\": [";
-	cout << name << endl << eventList.size() << endl;
+	diagnosticFile << name << endl << eventList.size() << endl;
 	if (eventList.size() > 0) {
 		for (int i = 0; i < eventList.size() - 1; ++i) {
 			os << eventList[i] << ", ";
@@ -353,18 +353,18 @@ void printEventList(ostream& os, vector<int>& eventList, const char* name) {
 	os << "]," << endl;
 }
 ostream& operator<<(ostream& os, Swimmer& s) {
-	cout << "_____________" << endl;
-	cout << "Writing lane " << s.laneNumber << endl;
+	diagnosticFile << "_____________" << endl;
+	diagnosticFile << "Writing lane " << s.laneNumber << endl;
 	os << "{" << endl << "\t\"laneNumber\": " << s.laneNumber << ", " << endl;
 	
-	cout << "Writing strokes" << endl;
+	diagnosticFile << "Writing strokes" << endl;
 	printEventList(os, s.strokeFrames, "strokes");
-	cout << "Writing breaths" << endl;
+	diagnosticFile << "Writing breaths" << endl;
 	printEventList(os, s.breathFrames, "breaths");
-	cout << "Writing breakouts" << endl;
+	diagnosticFile << "Writing breakouts" << endl;
 	printEventList(os, s.breakoutFrames, "breakouts");
 
-	cout << "Writing keyframes" << endl;
+	diagnosticFile << "Writing keyframes" << endl;
 	os << "\t\"keyFrames\": {" << endl;
 	
 	if (s.pastTrackingPoints.size() > 0) {
@@ -376,7 +376,7 @@ ostream& operator<<(ostream& os, Swimmer& s) {
 	os << "\t}" << endl;
 
 	os << "}";
-	cout << "_____________" << endl << endl;
+	diagnosticFile << "_____________" << endl << endl;
 	return os;
 }
 
@@ -627,7 +627,7 @@ void drawZoomBox() {
 }
 
 
-const int numHelpStringLines = 24;
+const int numHelpStringLines = 25;
 char* helpStrings[] = { "Keyboard controls:",
 						"    Play/Pause:              <SPACE>",
 						"    Frame Skipping:",
@@ -636,6 +636,7 @@ char* helpStrings[] = { "Keyboard controls:",
 						"        Skip -/+ 10 frames:  q / e",
 						"        Skip -/+ 100 frames: w / r",
 						"",
+"    Enable/Disable crosshair: t",
 						"    Enable/Disable Zoom:     z",
 						"    Zoom -/+:                x / c",
 "    Move zoom:               up/down/left/right",
@@ -759,7 +760,9 @@ void redraw() {
 		if (selectedSwimmer == -1 || swimmers[i]->laneNumber == selectedSwimmer) {
 			TrackingPoint* swimmerRegion = swimmers[i]->latestRegion(thisFrame);
 			if (swimmerRegion && swimmerRegion->visible) {
+				if (crosshairVisible)  {
 				swimmerRegion->draw(img);
+				}	
 				swimmers[i]->displayEvents(img);
 			}
 		}
@@ -905,16 +908,16 @@ void printResults(const char* filename, bool verbose) {
 	//if (swimmers.size() == 0)
 		//return;
 	if (verbose) {
-	cout << endl;
-	cout << "*******************************" << endl;
-	cout << "Opening output file for writing" << endl;
+		diagnosticFile << endl;
+		diagnosticFile << "*******************************" << endl;
+		diagnosticFile << "Opening output file for writing" << endl;
 	}
 	
 	ofstream writeFile;
 	writeFile.open(filename);
 
 	if (verbose)
-	cout << "Writing race metadata" << endl;
+		diagnosticFile << "Writing race metadata" << endl;
 	writeFile << "[" << endl
 			  << "{" << endl;
 	writeFile << "\t\"eventType\": \"" << eventType << "\"," << endl;
@@ -922,7 +925,7 @@ void printResults(const char* filename, bool verbose) {
 
 	writeFile << "}," << endl;
 	if (verbose)
-	cout << endl;
+		diagnosticFile << endl;
 	if (swimmers.size() > 0) {
 		for (int i = 0; i < swimmers.size() - 1; ++i) {
 			writeFile << (*swimmers[i]) << "," << endl;
@@ -933,8 +936,8 @@ void printResults(const char* filename, bool verbose) {
 		writeFile << "{\n}\n]";
 	}
 	if (verbose) {
-	cout << endl;
-	cout << "Closing output file" << endl;
+		diagnosticFile << endl;
+		diagnosticFile << "Closing output file" << endl;
 	}
 	writeFile.close();
 }
@@ -983,8 +986,10 @@ void buildFrameIndex() {
 // Setting selectedSwimmer to -1 means we see all
 void selectSwimmer(char laneNumber) {
 	selectedSwimmer = laneNumber - '0';
-	if (laneNumber == '`')
+	if (laneNumber == '`') {
 		selectedSwimmer = -1;
+		crosshairVisible = true;
+	}
 	
 	buildFrameIndex();
 	redraw();
@@ -1067,6 +1072,13 @@ void runMenuLoop()
 			}
 			else if (key == 32) { // <space>
 				playing = !playing;
+			}
+			else if (key == 't') {
+				if (selectedSwimmer != -1) {
+					// Always show the crosshair when viewing all swimmers
+					crosshairVisible = !crosshairVisible;
+					redraw();
+				}
 			}
 			else if (key == 'z') {
 				zoomActive = !zoomActive;
@@ -1174,7 +1186,8 @@ bool setEventType() {
 }
 
 int main(int argc, char* argv[]) {
-	
+	try
+	{
 	// If they provide only one arg, create a matching output file with .json extension
 	if (argc == 2) {
 		inputFilename = argv[1];
@@ -1237,10 +1250,18 @@ int main(int argc, char* argv[]) {
 		actually_quit = setEventType();
 	} while (!actually_quit);
 
+		diagnosticFile.open("last_run_diagnostics.txt");
+		diagnosticFile << "Diagnostic messages for " << inputFilename << endl << endl;
 	printResults(outputFilename.c_str(), true);
-	cout << "Deleting backup file" << endl << endl;
+		diagnosticFile << "Deleting backup file" << endl;
 	deleteBackupFile();
-	cout << "Complete. Program exiting normally" << endl;
+	}
+	catch (Exception e) {
+		diagnosticFile << endl << "Exception caught:" << endl;
+		diagnosticFile << e.msg << endl;
+	}
+	diagnosticFile << "Complete. Program exiting normally" << endl;
+	diagnosticFile.close();
 	return 0;
 }
 
