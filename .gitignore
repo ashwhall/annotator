@@ -8,7 +8,7 @@
 *.iob
 *.ilk
 *.zip
-.txt
+*.txt
 
 # User-specific files
 *.suo
