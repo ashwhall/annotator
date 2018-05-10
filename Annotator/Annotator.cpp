@@ -50,9 +50,9 @@ void drawMessage()
 {
 	if (messageActive && time(0) - messageTimer < MESSAGE_DISPLAY_TIME) {
 		int width = overlayMessageImg->size().width;
-		int height= overlayMessageImg->size().height;
+		int height = overlayMessageImg->size().height;
 		int xLoc = img.size().width / 2 - width / 2;
-		int yLoc = img.size().height/ 5 - height / 2;
+		int yLoc = img.size().height / 5 - height / 2;
 		Rect roi(xLoc, yLoc, width, height);
 		overlayMessageImg->copyTo(img(roi));
 	}
@@ -124,7 +124,7 @@ struct TrackingPoint {
 			// If it is not the keyframe, interpolate the position
 			//  and show in lime (purple if stopFrame).
 			Point inter2 = getPos() - offset2;
-			if (stopFrame) { 
+			if (stopFrame) {
 				circle(img, inter2, CORNER_CIRCLE_RAD, COLOUR_STOP_FRAME, circleThickness);
 			}
 			else
@@ -203,7 +203,7 @@ struct Swimmer {
 		case 2:
 			toggleBreakout(frame);
 			break;
-		default: 
+		default:
 			// Add more event types here...
 			break;
 		}
@@ -247,7 +247,7 @@ struct Swimmer {
 			if (i == 0) {
 				r->next = pastTrackingPoints[0];
 				r->hasNext = true;
-				
+
 
 				pastTrackingPoints.insert(pastTrackingPoints.begin(), r);
 			}
@@ -281,19 +281,19 @@ struct Swimmer {
 			}
 		}
 		/*for (int i = 0; i < strokeFrames.size(); ++i) {
-			if (strokeFrames[i] >= thisFrame) {
-				addText(img, strokeFrames[i], cvPoint(bottomRight.x - 225, bottomRight.y + 18));
-				//addText(img, strokeFrames[i], cvPoint(bottomRight.x - 50, topLeft.y + 18));
-				break;
-			}
+		if (strokeFrames[i] >= thisFrame) {
+		addText(img, strokeFrames[i], cvPoint(bottomRight.x - 225, bottomRight.y + 18));
+		//addText(img, strokeFrames[i], cvPoint(bottomRight.x - 50, topLeft.y + 18));
+		break;
+		}
 		}
 		// Display the largest frame that's smaller than the current frame (prev)
 		for (int i = (int)strokeFrames.size() - 1; i >= 0; --i) {
-			if (strokeFrames[i] <= thisFrame) {
-				//addText(img, strokeFrames[i], cvPoint(topLeft.x + 20, topLeft.y + 18));
-				addText(img, strokeFrames[i], cvPoint(bottomRight.x + 100, bottomRight.y + 18));
-				break;
-			}
+		if (strokeFrames[i] <= thisFrame) {
+		//addText(img, strokeFrames[i], cvPoint(topLeft.x + 20, topLeft.y + 18));
+		addText(img, strokeFrames[i], cvPoint(bottomRight.x + 100, bottomRight.y + 18));
+		break;
+		}
 		}*/
 	}
 	void removeTrackingPoint(int atFrame) {
@@ -356,7 +356,7 @@ ostream& operator<<(ostream& os, Swimmer& s) {
 	diagnosticFile << "_____________" << endl;
 	diagnosticFile << "Writing lane " << s.laneNumber << endl;
 	os << "{" << endl << "\t\"laneNumber\": " << s.laneNumber << ", " << endl;
-	
+
 	diagnosticFile << "Writing strokes" << endl;
 	printEventList(os, s.strokeFrames, "strokes");
 	diagnosticFile << "Writing breaths" << endl;
@@ -366,7 +366,7 @@ ostream& operator<<(ostream& os, Swimmer& s) {
 
 	diagnosticFile << "Writing keyframes" << endl;
 	os << "\t\"keyFrames\": {" << endl;
-	
+
 	if (s.pastTrackingPoints.size() > 0) {
 		for (int i = 0; i < s.pastTrackingPoints.size() - 1; ++i) {
 			os << *(s.pastTrackingPoints[i]) << "," << endl;
@@ -398,7 +398,7 @@ Swimmer* loadSwimmer(Json::Value swimJson) {
 	Swimmer* s = new Swimmer;
 
 	s->laneNumber = swimJson["laneNumber"].asInt();
-	
+
 	int nStrokes = swimJson["strokes"].size();
 	for (int i = 0; i < nStrokes; ++i) {
 		s->toggleStroke(swimJson["strokes"][i].asInt());
@@ -408,7 +408,7 @@ Swimmer* loadSwimmer(Json::Value swimJson) {
 	for (int i = 0; i < nBreaths; ++i) {
 		s->toggleBreath(swimJson["breaths"][i].asInt());
 	}
-	
+
 	int nBreakouts = swimJson["breakouts"].size();
 	for (int i = 0; i < nBreakouts; ++i) {
 		s->toggleBreakout(swimJson["breakouts"][i].asInt());
@@ -439,7 +439,7 @@ void showProgress(float percent) {
 			printf("=");
 		}
 	}
-	printf("%.2f%% complete", percent*100);
+	printf("%.2f%% complete", percent * 100);
 }
 
 
@@ -455,16 +455,16 @@ void calcBinaryFileMD5() {
 	ifstream file(inputFilename.c_str(), ios::binary | ios::ate);
 	unsigned long totalBytes = (unsigned long)file.tellg();
 	cout << "Hashing " << (totalBytes * 0.000001) << "MB file" << endl;
-	
-	
+
+
 	int chunkSize = 1024;
 	unsigned long requiredIters = totalBytes / chunkSize;
 	char* data = new char[chunkSize];
-	
+
 	int bytes;
 	MD5_CTX mdContext;
 	MD5_Init(&mdContext);
-	
+
 	int updateFrequency = 5000;
 	unsigned long currIter = 0;
 	while ((bytes = (int)fread(data, 1, chunkSize, inFile)) != 0) {
@@ -493,34 +493,34 @@ void load(const char* filename) {
 	bool shouldCalcHash = true;
 	// Look for a backup file first
 	f = new ifstream(string(filename) + string(".BAK"));
-	if(!f->good())
+	if (!f->good())
 		f = new ifstream(filename);
 	if (f->good()) {
 		Json::Value past;
 		*f >> past;
-		
+
 		int i = 0;
 		// See if the first object is the event type, instead of a swimmer
 		// If so, set it globally and offset the start of the swimmers by 1
 		string e_type = past[0]["eventType"].asString();
-		if (e_type.length() != 0){
+		if (e_type.length() != 0) {
 			i = 1;
 			eventType = e_type;
 		}
 		string file_hash = past[0]["fileHash"].asString();
 		if (file_hash.length() != 0) {
 			i = 1;
-			fileHash= file_hash;
+			fileHash = file_hash;
 			shouldCalcHash = false;
 		}
-		
+
 		// Read in all swimmers from file, noting which lanes have been represented
 		bool foundLanes[10] = { false };
 		int nObj = past.size();
 		for (; i < nObj; ++i) {
 			foundLanes[past[i]["laneNumber"].asInt()] = true;
 			Swimmer* s = loadSwimmer(past[i]);
-			if(s != NULL)
+			if (s != NULL)
 				swimmers.push_back(s);
 		}
 
@@ -575,7 +575,7 @@ void drawZoomBox() {
 		cut_top_x = -topLeft_x;
 	if (topLeft_y < 0)
 		cut_top_y = -topLeft_y;
-	
+
 
 	int topLeft_x_cut = max(0, topLeft_x);
 	int topLeft_y_cut = max(0, topLeft_y);
@@ -588,19 +588,19 @@ void drawZoomBox() {
 
 	if (sourceWid <= 0 || sourceHei <= 0)
 		return;
-	
+
 	Rect sourceROI(topLeft_x_cut, topLeft_y_cut, sourceWid, sourceHei);
 	Mat sourceImg = (*zoomImg)(sourceROI);
-	
+
 	Mat image(ZOOM_SIZE, ZOOM_SIZE, CV_8UC3, Scalar(0, 0, 0));
 	Rect roi(cut_top_x, cut_top_y, sourceImg.size().width, sourceImg.size().height);
-	
+
 	sourceImg.copyTo(image(roi));
 	rectangle(image, Rect(0, 0, image.size().width, image.size().height), Scalar(0, 0, 0), 2);
-	
+
 	resize(image, image, Size(), zoomFactor, zoomFactor);
-		
-	topLeft_x = mouse_x - ZOOM_SIZE*zoomFactor/2;
+
+	topLeft_x = mouse_x - ZOOM_SIZE*zoomFactor / 2;
 	topLeft_y = mouse_y - ZOOM_SIZE*zoomFactor / 2;
 	botRight_x = mouse_x + ZOOM_SIZE*zoomFactor / 2;
 	botRight_y = mouse_y + ZOOM_SIZE*zoomFactor / 2;
@@ -612,16 +612,16 @@ void drawZoomBox() {
 	int cut_bot_y = -min(0, img.size().height - botRight_y);
 
 	Mat cutImg;
-	roi = Rect(	cut_top_x, 
-				cut_top_y, 
-				image.size().width - cut_top_x - cut_bot_x, 
-				image.size().height - cut_top_y - cut_bot_y);
+	roi = Rect(cut_top_x,
+		cut_top_y,
+		image.size().width - cut_top_x - cut_bot_x,
+		image.size().height - cut_top_y - cut_bot_y);
 	cutImg = image(roi).clone();
 
 	int xPos = min(img.size().width, max(0, mouse_x - ZOOM_SIZE*zoomFactor / 2));
 	int yPos = min(img.size().height, max(0, mouse_y - ZOOM_SIZE*zoomFactor / 2));
 
-	
+
 	roi = Rect(xPos, yPos, cutImg.size().width, cutImg.size().height);
 	cutImg.copyTo(img(roi));
 }
@@ -629,38 +629,38 @@ void drawZoomBox() {
 
 const int numHelpStringLines = 25;
 char* helpStrings[] = { "Keyboard controls:",
-						"    Play/Pause:              <SPACE>",
-						"    Frame Skipping:",
-						"        Skip -/+ 1 frame:    a / d",
-						"        Skip -/+ 5 frames:   s / f",
-						"        Skip -/+ 10 frames:  q / e",
-						"        Skip -/+ 100 frames: w / r",
-						"",
+"    Play/Pause:              <SPACE>",
+"    Frame Skipping:",
+"        Skip -/+ 1 frame:     a / d",
+"        Skip -/+ 5 frames:    s / f",
+"        Skip -/+ 10 frames:   q / e",
+"        Skip -/+ 100 frames:  w / r",
+"",
 "    Enable/Disable crosshair: t",
-						"    Enable/Disable Zoom:     z",
-						"    Zoom -/+:                x / c",
-"    Move zoom:               up/down/left/right",
-						"",
-						"    Select lane:             0-9",
-						"    Select all lanes:        `",
-						"",
-						"    Change event-label:      <TAB>",
-						"",
-						"    Display help:            h",
-						"    Save and exit:           <ESC>",
-						"Mouse controls:",
-						"    Toggle event-label:      <RIGHT-MOUSE>",
-						"    Add keyframe:            <LEFT-MOUSE>",
-						"    Move keyframe:           Drag <LEFT-MOUSE>",
-						"    Convert to endframe:     <SHIFT>+<LEFT-MOUSE>",
-						"    Delete keyframe:         <CTRL>+<LEFT-MOUSE>" };
+"    Enable/Disable Zoom:      z",
+"    Zoom -/+:                 x / c",
+"    Move zoom:                up/down/left/right",
+"",
+"    Select lane:              0-9",
+"    Select all lanes:         `",
+"",
+"    Change event-label:       <TAB>",
+"",
+"    Display help:             h",
+"    Save and exit:            <ESC>",
+"Mouse controls:",
+"    Toggle event-label:       <RIGHT-MOUSE>",
+"    Add keyframe:             <LEFT-MOUSE>",
+"    Move keyframe:            Drag <LEFT-MOUSE>",
+"    Convert to endframe:      <SHIFT>+<LEFT-MOUSE>",
+"    Delete keyframe:          <CTRL>+<LEFT-MOUSE>" };
 
 // Display shortcuts
 void displayHelp() {
 	int width = img.size().width, height = img.size().height;
 	double spacing = height / 35.0;
 	rectangle(img, Rect(0, 0, width, height), Scalar(0, 0, 0), -1);
-		
+
 	for (int i = 0; i < numHelpStringLines; ++i)
 	{
 		addText(helpStrings[i], Point(20, (int)(spacing*(i + 1))), 2);
@@ -672,9 +672,9 @@ void displayHelp() {
 void displayInfo() {
 	double spacing = img.size().width / 3200.0;
 	// Display current frame
-	addText(string("Frame: ") + to_string(thisFrame) + string("/") + to_string(maxFrames), 
-			Point((int)(20 * spacing), 50), Scalar(0, 127, 255), 3);
-	
+	addText(string("Frame: ") + to_string(thisFrame) + string("/") + to_string(maxFrames),
+		Point((int)(20 * spacing), 50), Scalar(0, 127, 255), 3);
+
 	// Display zoomsize/amount
 	if (zoomActive)
 	{
@@ -685,12 +685,12 @@ void displayInfo() {
 	size_t a = inputFilename.find_last_of("\\") + 1;
 	size_t b = inputFilename.find_last_of("/") + 1;
 	int splitIndex = (int)max(a, b);
-	
+
 	string activeSwimmerString = string("   Active swimmer: ") + (selectedSwimmer == -1 ? string("All") : to_string(selectedSwimmer));
-	addText(string("File: ") + inputFilename.substr(splitIndex, inputFilename.length() - splitIndex) + 
-			activeSwimmerString +
-			string("   Marking: ") + string(markerTypes[currentMarkerType]),
-			Point((int)(900 * spacing), 50), Scalar(255, 255, 255), 3);
+	addText(string("File: ") + inputFilename.substr(splitIndex, inputFilename.length() - splitIndex) +
+		activeSwimmerString +
+		string("   Marking: ") + string(markerTypes[currentMarkerType]),
+		Point((int)(900 * spacing), 50), Scalar(255, 255, 255), 3);
 
 }
 void displayFrameIndex() {
@@ -698,14 +698,14 @@ void displayFrameIndex() {
 	int imgHeight = img.size().height;
 
 	frameIndexRegionSize = (float)imgWidth / maxFrames;
-	
+
 	Mat frameIndexImg(frameIndexImgHeight, imgWidth, CV_8UC3, Scalar(0, 0, 0));
 	for (int i = 0; i < maxFrames; ++i) {
 		if (frameIndex[i])
-		{			
+		{
 			if (frameIndex[i] & KEYFRAME_INDEX)
 				line(frameIndexImg, Point((int)(i*frameIndexRegionSize), 0),
-						Point((int)(i*frameIndexRegionSize), frameIndexImgHeight), COLOUR_KEYFRAME, 5);
+					Point((int)(i*frameIndexRegionSize), frameIndexImgHeight), COLOUR_KEYFRAME, 5);
 			else if (frameIndex[i] & STOPFRAME_INDEX)
 				line(frameIndexImg, Point((int)(i*frameIndexRegionSize), 0),
 					Point((int)(i*frameIndexRegionSize), frameIndexImgHeight), COLOUR_STOP_FRAME, 5);
@@ -725,7 +725,7 @@ void displayFrameIndex() {
 		if (frameIndex[i] & currentEventIndex) {
 			circle(frameIndexImg, Point((int)(i*frameIndexRegionSize), 50), 10,
 				Scalar(0, 255, 255), -1);
-	}
+		}
 
 	}
 	// Current frame indicator
@@ -742,6 +742,30 @@ void displayFrameIndex() {
 	Rect roi(0, imgHeight - frameIndexImgHeight, imgWidth, frameIndexImgHeight);
 	frameIndexImg.copyTo(img(roi));
 }
+void drawTracks() {
+	int lineThickness = zoomActive ? 1 : thickTracks ? 3 : 2;
+	Scalar normalLineColour(31, 31, 255);
+	Scalar stopLineColour(255, 31, 31);
+	for (Swimmer* swimmer : swimmers) {
+		if (swimmer != NULL) {
+			if (selectedSwimmer == -1 || swimmer->laneNumber == selectedSwimmer)
+			{
+				Scalar currLineColour;
+				if (swimmer->pastTrackingPoints.size() > 2) {
+					TrackingPoint* prevPoint = swimmer->pastTrackingPoints.front();
+					for (TrackingPoint* currPoint : swimmer->pastTrackingPoints) {
+						if (prevPoint->stopFrame)
+							currLineColour = stopLineColour;
+						else
+							currLineColour = normalLineColour;
+						line(img, prevPoint->pos, currPoint->pos, currLineColour, lineThickness);
+						prevPoint = currPoint;
+					}
+				}
+			}
+		}
+	}
+}
 // Redraws the regions based on the current frame
 void redraw() {
 	// Copy from the frame again
@@ -752,7 +776,10 @@ void redraw() {
 		return;
 	}
 	
-
+	if (tracksVisible) {
+		//cout << "Drawing tracks" << endl;
+		drawTracks();
+	}
 	// For each relevant region, draw it onto the image
 	int swimmer_count = (int)swimmers.size();
 
@@ -761,14 +788,14 @@ void redraw() {
 			TrackingPoint* swimmerRegion = swimmers[i]->latestRegion(thisFrame);
 			if (swimmerRegion && swimmerRegion->visible) {
 				if (crosshairVisible)  {
-				swimmerRegion->draw(img);
+					swimmerRegion->draw(img);
 				}	
 				swimmers[i]->displayEvents(img);
 			}
 		}
 	}
-
-
+	
+	
 
 	if (zoomActive) {
 		int height = img.size().height;
@@ -783,10 +810,10 @@ void redraw() {
 	displayInfo();
 
 	displayFrameIndex();
-	
+
 	drawMessage();
 	
-	imshow(mainWindowHandle, img);	
+	imshow(mainWindowHandle, img);
 }
 
 Swimmer* existingActiveSwimmer() {
@@ -885,7 +912,7 @@ void nextFrame() {
 		vid.open(inputFilename);
 	vid >> frame;
 	++thisFrame;
-	
+
 	redraw();
 }
 
@@ -906,7 +933,7 @@ TrackingPoint* newKeyFrame(TrackingPoint* candidate, Swimmer* s) {
 // Writes data to output file
 void printResults(const char* filename, bool verbose) {
 	//if (swimmers.size() == 0)
-		//return;
+	//return;
 	if (verbose) {
 		diagnosticFile << endl;
 		diagnosticFile << "*******************************" << endl;
@@ -919,7 +946,7 @@ void printResults(const char* filename, bool verbose) {
 	if (verbose)
 		diagnosticFile << "Writing race metadata" << endl;
 	writeFile << "[" << endl
-			  << "{" << endl;
+		<< "{" << endl;
 	writeFile << "\t\"eventType\": \"" << eventType << "\"," << endl;
 	writeFile << "\t\"fileHash\": \"" << fileHash << "\"" << endl;
 
@@ -989,8 +1016,9 @@ void selectSwimmer(char laneNumber) {
 	if (laneNumber == '`') {
 		selectedSwimmer = -1;
 		crosshairVisible = true;
+		tracksVisible = true;
 	}
-	
+
 	buildFrameIndex();
 	redraw();
 }
@@ -1045,7 +1073,7 @@ void runMenuLoop()
 			}
 			if (key >= '0' && key <= '9' || key == '`') {
 				selectSwimmer(key);
-			} 
+			}
 			else if (key == 'w') {
 				jumpFrame(-THIRD_LEVEL_JUMP);
 			}
@@ -1074,11 +1102,28 @@ void runMenuLoop()
 				playing = !playing;
 			}
 			else if (key == 't') {
-				if (selectedSwimmer != -1) {
-					// Always show the crosshair when viewing all swimmers
-					crosshairVisible = !crosshairVisible;
-					redraw();
+				if (crosshairVisible) {
+					if (tracksVisible) {
+						if (thickTracks) {
+							crosshairVisible = false;
+							tracksVisible = false;
+							thickTracks = false;
+						}
+						else {
+							thickTracks = true;
+						}
+					}
+					else {
+						tracksVisible = true;
+					}
 				}
+				else {
+					crosshairVisible = true;
+				}
+				if (selectedSwimmer == -1)
+					crosshairVisible = true;
+				
+				redraw();
 			}
 			else if (key == 'z') {
 				zoomActive = !zoomActive;
@@ -1135,13 +1180,13 @@ void redrawEventChoices(int index) {
 	addText("You must enter the event type before exiting.", Point(20, (int)(spacing)), 2);
 	for (int i = 0; i < eventTypeCount; ++i) {
 		if (i == index) {
-			addText(to_string(i+1) + string(": ") + string(eventTypes[i]), Point(100, (int)(spacing*(i + 2))), Scalar(127, 255, 0), 2);
+			addText(to_string(i + 1) + string(": ") + string(eventTypes[i]), Point(100, (int)(spacing*(i + 2))), Scalar(127, 255, 0), 2);
 		}
 		else
 		{
-			addText(to_string(i+1) + string(": ") + string(eventTypes[i]), Point(100, (int)(spacing*(i + 2))), 2);
+			addText(to_string(i + 1) + string(": ") + string(eventTypes[i]), Point(100, (int)(spacing*(i + 2))), 2);
 		}
-		
+
 	}
 	addText("Press the corresponding number, then <ENTER> to save.",
 		Point(20, (int)(spacing*(eventTypeCount + 2))), 2);
@@ -1156,105 +1201,109 @@ bool setEventType() {
 	// Highlight the currently selected event_type
 	int index = -1;
 	if (eventType.length() > 0) {
-		for(int i = 0; i < eventTypeCount; ++i) {
+		for (int i = 0; i < eventTypeCount; ++i) {
 			if (strcmp(eventTypes[i], eventType.c_str()) == 0) {
-				index = i+1;
+				index = i + 1;
 			}
 		}
 	}
-	redrawEventChoices(index-1);
+	redrawEventChoices(index - 1);
 
 	// Loop, taking input and updating the options
 	while (true) {
 		int key = waitKey(30); // read key
-		if(key == 27) { // <esc>
+		if (key == 27) { // <esc>
 			return false;
 		}
 		if (key == 13) // <enter>
 		{
-			if (index >= 1 && index <= eventTypeCount) 
+			if (index >= 1 && index <= eventTypeCount)
 				break;
 		}
 		else if (key != 255) {
 			index = key - 48;
-			redrawEventChoices(index-1);
+			redrawEventChoices(index - 1);
 		}
 	}
-	eventType = string(eventTypes[index-1]);
-	
+	eventType = string(eventTypes[index - 1]);
+
 	return true;
 }
 
 int main(int argc, char* argv[]) {
 	try
 	{
-	// If they provide only one arg, create a matching output file with .json extension
-	if (argc == 2) {
-		inputFilename = argv[1];
-		int ext_index = (int)inputFilename.find_last_of(".");
+		// If they provide only one arg, create a matching output file with .json extension
+		if (argc == 2) {
+			inputFilename = argv[1];
+			int ext_index = (int)inputFilename.find_last_of(".");
 
-		outputFilename = inputFilename;
-		outputFilename.replace(ext_index, outputFilename.length(), ".json");
-		
-		cout << "input file: " << inputFilename << endl
-			<< "output file: " << outputFilename << endl;
-	}
-	else if (argc == 3) {
-		inputFilename = argv[1];
-		outputFilename = argv[2];
-	}
-	else {
-		cout << "Usage: ./Annotator <video_file> <json_file>" << endl;
-		cout << "                    OR " << endl;
-		cout << "       ./Annotator <video_file>" << endl;
-		for (int i = 0; i < numHelpStringLines; ++i)
-		{
-			cout << helpStrings[i] << endl;
+			outputFilename = inputFilename;
+			outputFilename.replace(ext_index, outputFilename.length(), ".json");
+
+			cout << "input file: " << inputFilename << endl
+				<< "output file: " << outputFilename << endl;
 		}
-		return 0;
-		//inputFilename = "D:\\swimming\\footage\\red drive\\CLIP0000085_000.mov";
-		//outputFilename = "D:\\swimming\\footage\\red drive\\CLIP0000085_000.json";
-	}
-	
-	vid.open(inputFilename);
-	maxFrames = (int)vid.get(CV_CAP_PROP_FRAME_COUNT);
-	maxFrames -= 3; // For some unknown reason, the frame count is always out by three...
-	cout << "Frame count: " << maxFrames << endl;
+		else if (argc == 3) {
+			inputFilename = argv[1];
+			outputFilename = argv[2];
+		}
+		else {
+			cout << "Usage: ./Annotator <video_file> <json_file>" << endl;
+			cout << "                    OR " << endl;
+			cout << "       ./Annotator <video_file>" << endl;
+			for (int i = 0; i < numHelpStringLines; ++i)
+			{
+				cout << helpStrings[i] << endl;
+			}
+			return 0;
+			//inputFilename = "D:\\temp\\prob\\sc.mov";
+			//outputFilename = "D:\\temp\\prob\\sc.json";
+			//inputFilename = "D:\\videos\\movies\\Blue Jasmine (2013).mp4";
+			//outputFilename = "D:\\swimming\\Annotator\\x64\\Release\\bugs\\CLIP0000303_002.json";
+			//outputFilename = "D:\\videos\\movies\\Blue Jasmine (2013).json";
+			//outputFilename = "D:\\swimming\\CLIP0000095_001.json";
+		}
 
-	readFrame();
-	fontSize = (frame.size().height / 1100.0);
-	//font_size = 1.5;
-	buildFrameIndex();
-	
-	
-	load(outputFilename.c_str());
+		vid.open(inputFilename);
+		maxFrames = (int)vid.get(CV_CAP_PROP_FRAME_COUNT);
+		maxFrames -= 3; // For some unknown reason, the frame count is always out by three...
+		cout << "Frame count: " << maxFrames << endl;
 
-	// Set up a named window for resizing later
-	cvNamedWindow(mainWindowHandle, WINDOW_NORMAL);
-	cvResizeWindow(mainWindowHandle, 1280, 720);
-
-	// Jump zero frames == read current frame
-	jumpFrame(0);
-
-	printf("Press ESC to exit\n");
+		readFrame();
+		fontSize = (frame.size().height / 1100.0);
+		//font_size = 1.5;
+		buildFrameIndex();
 
 
-	// The loop gives them a chance to cancel quitting
-	bool actually_quit = false;
-	do
-	{
-		redraw();
-		cvSetMouseCallback(mainWindowHandle, normalMouseHandler, NULL);
-		runMenuLoop();
-		cvSetMouseCallback(mainWindowHandle, NULL, NULL);
-		actually_quit = setEventType();
-	} while (!actually_quit);
+		load(outputFilename.c_str());
+
+		// Set up a named window for resizing later
+		cvNamedWindow(mainWindowHandle, WINDOW_NORMAL);
+		cvResizeWindow(mainWindowHandle, 1280, 720);
+
+		// Jump zero frames == read current frame
+		jumpFrame(0);
+
+		printf("Press ESC to exit\n");
+
+
+		// The loop gives them a chance to cancel quitting
+		bool actually_quit = false;
+		do
+		{
+			redraw();
+			cvSetMouseCallback(mainWindowHandle, normalMouseHandler, NULL);
+			runMenuLoop();
+			cvSetMouseCallback(mainWindowHandle, NULL, NULL);
+			actually_quit = setEventType();
+		} while (!actually_quit);
 
 		diagnosticFile.open("last_run_diagnostics.txt");
 		diagnosticFile << "Diagnostic messages for " << inputFilename << endl << endl;
-	printResults(outputFilename.c_str(), true);
+		printResults(outputFilename.c_str(), true);
 		diagnosticFile << "Deleting backup file" << endl;
-	deleteBackupFile();
+		deleteBackupFile();
 	}
 	catch (Exception e) {
 		diagnosticFile << endl << "Exception caught:" << endl;
@@ -1308,7 +1357,7 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 
 	// if it's not a left-click, then we don't care
 	/*if (event != CV_EVENT_LBUTTONDOWN) {
-		return;
+	return;
 	}*/
 
 	// Delete keyframe
@@ -1316,10 +1365,10 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 		Swimmer* s;
 		int swimmerIndex;
 		TrackingPoint* r = existingRegion(scaledHandle, &s, &swimmerIndex);
-		
+
 		// Entirely delete swimmer if we're removing their only tracking point
 		if (r && s && s->pastTrackingPoints.size() <= 1) {
-		
+
 			swimmers.erase(swimmers.begin() + swimmerIndex);
 			buildFrameIndex();
 			redraw();
@@ -1350,29 +1399,29 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 		}
 	}
 	/*else if (!playing && flags == (EVENT_FLAG_CTRLKEY + EVENT_FLAG_ALTKEY + EVENT_FLAG_LBUTTON)) {
-		Swimmer* s;
-		int swimmerIndex;
+	Swimmer* s;
+	int swimmerIndex;
 
-		// Entirely delete swimmer if we're removing their only tracking point
-		if (existingRegion(handle, &s, &swimmerIndex)) {
-			swimmers.erase(swimmers.begin() + swimmerIndex);
-			buildFrameIndex();
-			redraw();
-		}
+	// Entirely delete swimmer if we're removing their only tracking point
+	if (existingRegion(handle, &s, &swimmerIndex)) {
+	swimmers.erase(swimmers.begin() + swimmerIndex);
+	buildFrameIndex();
+	redraw();
+	}
 	}*/
 	else if (event == CV_EVENT_LBUTTONDOWN) {
 		TrackingPoint* existing = NULL;
 		Swimmer* s = NULL;
 
 		if (trackBarClick() || selectedSwimmer == -1)
-		{ 
+		{
 		}
 		else if (!playing && !!(existing = existingRegion(handle, &s))) {
 			r = newKeyFrame(existing, s);
 			r->visible = false;
 			cvSetMouseCallback(mainWindowHandle, moveRegMouseHandler, NULL);
 		}
-		else if(!playing) {
+		else if (!playing) {
 			r = new TrackingPoint;
 			(*r).pos = scaledHandle;
 			r->visible = false;

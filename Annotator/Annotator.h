@@ -97,7 +97,8 @@ int markerTypeCount = 3;
 const char* markerTypes[3] = { "Stroke", "Breath", "Breakout" };
 int currentMarkerType = 0;
 
-
+bool tracksVisible = false;
+bool thickTracks = false;
 
 
 
