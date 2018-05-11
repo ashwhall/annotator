@@ -636,7 +636,7 @@ char* helpStrings[] = { "Keyboard controls:",
 "        Skip -/+ 10 frames:   q / e",
 "        Skip -/+ 100 frames:  w / r",
 "",
-"    Enable/Disable crosshair: t",
+"    Show/Hide crosshair/tracks: t",
 "    Enable/Disable Zoom:      z",
 "    Zoom -/+:                 x / c",
 "    Move zoom:                up/down/left/right",
@@ -831,6 +831,14 @@ Swimmer* attachedSwimmer(Point cor2) {
 		// If the swimmer has a region already and it's close enough to this new one
 		if (reg && norm(cor2 - (*reg).pos) < NEARNESS_THRESH) {
 			return (*it);
+		}
+	}
+	return NULL;
+}
+Swimmer* getSwimmerByLane(int lane) {
+	for (auto it : swimmers) {
+		if (it->laneNumber == selectedSwimmer) {
+			return it;
 		}
 	}
 	return NULL;
@@ -1362,37 +1370,24 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 
 	// Delete keyframe
 	if (!playing && flags == (EVENT_FLAG_CTRLKEY + EVENT_FLAG_LBUTTON)) {
-		Swimmer* s;
-		int swimmerIndex;
-		TrackingPoint* r = existingRegion(scaledHandle, &s, &swimmerIndex);
-
-		// Entirely delete swimmer if we're removing their only tracking point
-		if (r && s && s->pastTrackingPoints.size() <= 1) {
-
-			swimmers.erase(swimmers.begin() + swimmerIndex);
-			buildFrameIndex();
-			redraw();
-
-		}
-		if (r && r->frame == thisFrame) {
+		
+		Swimmer* s = getSwimmerByLane(selectedSwimmer);
+		if (s != NULL) {
 			s->removeTrackingPoint(thisFrame);
 			buildFrameIndex();
 			redraw();
 		}
 	}
 	else if (!playing && event == CV_EVENT_RBUTTONDOWN) {
-		for (vector<Swimmer*>::iterator it = swimmers.begin(); it != swimmers.end(); ++it) {
-			if ((*it)->laneNumber == selectedSwimmer) {
-				(*it)->toggleEvent(thisFrame);
-				buildFrameIndex();
-				redraw();
-			}
+		Swimmer* s = getSwimmerByLane(selectedSwimmer);
+		if (s != NULL) {
+			s->toggleEvent(thisFrame);
+			redraw();
 		}
 	}
 	else if (!playing && flags == (EVENT_FLAG_SHIFTKEY + EVENT_FLAG_LBUTTON)) {
-		Swimmer* s = NULL;
-		existingRegion(scaledHandle, &s);
-		if (s) {
+		Swimmer* s = getSwimmerByLane(selectedSwimmer);
+		if (s != NULL) {
 			s->stopTracking(thisFrame);
 			buildFrameIndex();
 			redraw();
