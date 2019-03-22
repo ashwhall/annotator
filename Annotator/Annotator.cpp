@@ -558,75 +558,6 @@ void load(const char* filename) {
 
 
 
-
-
-
-// Draws a floating zoomed-in box at the mouse position
-void drawZoomBox() {
-	int mouse_x = handle.x, mouse_y = handle.y;
-
-	int topLeft_x = mouse_x - ZOOM_SIZE / 2;
-	int topLeft_y = mouse_y - ZOOM_SIZE / 2;
-	int botRight_x = mouse_x + ZOOM_SIZE / 2;
-	int botRight_y = mouse_y + ZOOM_SIZE / 2;
-
-	int cut_top_x = 0, cut_top_y = 0;
-	if (topLeft_x < 0)
-		cut_top_x = -topLeft_x;
-	if (topLeft_y < 0)
-		cut_top_y = -topLeft_y;
-
-
-	int topLeft_x_cut = max(0, topLeft_x);
-	int topLeft_y_cut = max(0, topLeft_y);
-	int botRight_x_cut = min(img.size().width, botRight_x);
-	int botRight_y_cut = min(img.size().height, botRight_y);
-
-
-	int sourceWid = botRight_x_cut - topLeft_x_cut;
-	int sourceHei = botRight_y_cut - topLeft_y_cut;
-
-	if (sourceWid <= 0 || sourceHei <= 0)
-		return;
-
-	Rect sourceROI(topLeft_x_cut, topLeft_y_cut, sourceWid, sourceHei);
-	Mat sourceImg = (*zoomImg)(sourceROI);
-
-	Mat image(ZOOM_SIZE, ZOOM_SIZE, CV_8UC3, Scalar(0, 0, 0));
-	Rect roi(cut_top_x, cut_top_y, sourceImg.size().width, sourceImg.size().height);
-
-	sourceImg.copyTo(image(roi));
-	rectangle(image, Rect(0, 0, image.size().width, image.size().height), Scalar(0, 0, 0), 2);
-
-	resize(image, image, Size(), zoomFactor, zoomFactor);
-
-	topLeft_x = mouse_x - ZOOM_SIZE*zoomFactor / 2;
-	topLeft_y = mouse_y - ZOOM_SIZE*zoomFactor / 2;
-	botRight_x = mouse_x + ZOOM_SIZE*zoomFactor / 2;
-	botRight_y = mouse_y + ZOOM_SIZE*zoomFactor / 2;
-
-	cut_top_x = -min(0, topLeft_x);
-	cut_top_y = -min(0, topLeft_y);
-
-	int cut_bot_x = -min(0, img.size().width - botRight_x);
-	int cut_bot_y = -min(0, img.size().height - botRight_y);
-
-	Mat cutImg;
-	roi = Rect(cut_top_x,
-		cut_top_y,
-		image.size().width - cut_top_x - cut_bot_x,
-		image.size().height - cut_top_y - cut_bot_y);
-	cutImg = image(roi).clone();
-
-	int xPos = min(img.size().width, max(0, mouse_x - ZOOM_SIZE*zoomFactor / 2));
-	int yPos = min(img.size().height, max(0, mouse_y - ZOOM_SIZE*zoomFactor / 2));
-
-
-	roi = Rect(xPos, yPos, cutImg.size().width, cutImg.size().height);
-	cutImg.copyTo(img(roi));
-}
-
-
 const int numHelpStringLines = 25;
 char* helpStrings[] = { "Keyboard controls:",
 "    Play/Pause:              <SPACE>",
@@ -984,7 +915,6 @@ void buildFrameIndex() {
 	for (int i = 0; i < maxFrames; i++) {
 		frameIndex[i] = 0;
 	}
-
 	for (Swimmer* swimmer : swimmers) {
 		if (swimmer != NULL) {
 			if (selectedSwimmer == -1 || swimmer->laneNumber == selectedSwimmer)
@@ -1265,6 +1195,8 @@ int main(int argc, char* argv[]) {
 				cout << helpStrings[i] << endl;
 			}
 			return 0;
+			//inputFilename = "D:\\swimming\\footage\\red drive\\CLIP0000048_000.mov";
+			//outputFilename = "D:\\swimming\\footage\\red drive\\CLIP0000048_000.json";
 			//inputFilename = "D:\\temp\\prob\\sc.mov";
 			//outputFilename = "D:\\temp\\prob\\sc.json";
 			//inputFilename = "D:\\videos\\movies\\Blue Jasmine (2013).mp4";
@@ -1280,11 +1212,11 @@ int main(int argc, char* argv[]) {
 
 		readFrame();
 		fontSize = (frame.size().height / 1100.0);
-		//font_size = 1.5;
+
 		buildFrameIndex();
-
-
 		load(outputFilename.c_str());
+		buildFrameIndex();
+		
 
 		// Set up a named window for resizing later
 		cvNamedWindow(mainWindowHandle, WINDOW_NORMAL);
@@ -1382,6 +1314,7 @@ void normalMouseHandler(int event, int x, int y, int flags, void* params) {
 		Swimmer* s = getSwimmerByLane(selectedSwimmer);
 		if (s != NULL) {
 			s->toggleEvent(thisFrame);
+			buildFrameIndex();
 			redraw();
 		}
 	}
